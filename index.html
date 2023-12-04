@@ -99,7 +99,7 @@
     <h1>Capstone food clock</h1>
 
     <!-- Ajout de l'image -->
-    <img src="ImgFoodClock.png" alt="img..." style="max-width: 100%; height: auto;">
+ <img src="ImgFoodClock.png" alt="img..." style="display: block; margin-left: auto; margin-right: auto; width: 15%;">
 
     <form id="ajouterForm">
         <label for="nom">Nom de l'aliment:</label>
@@ -256,26 +256,6 @@ function recette(aliments) {
 
     
     var suggestionRecette = obtenirSuggestionRecette(recherche);
-
-
-
-  
-alert("Suggestion de recette avec les aliments alertés :\n\n" + suggestionRecette); 
-   
-   
-}
-
-function obtenirSuggestionRecette(recherche) {
-    
-
-    
-    return "fais une recette avec " + recherche + ".";
-}
-
-
-recette(getAlimentsEnAlerte())
-
-
 
 
 //gere me bouton de recommandation
