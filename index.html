@@ -1,0 +1,314 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Aliments</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f7f7f7;
+            margin: 20px;
+        }
+
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+
+        form {
+            max-width: 400px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #4caf50;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            text-align: center;
+        }
+
+        li {
+            background-color: #fff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .alert {
+            background-color: #ff8c00;
+            color: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .remove-btn {
+            background-color: #ff4d4d;
+            color: #fff;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .recette-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Capstone food clock</h1>
+
+    <!-- Ajout de l'image -->
+    <img src="Imgfoodclock.jpg" alt="img..." style="max-width: 100%; height: auto;">
+
+    <form id="ajouterForm">
+        <label for="nom">Nom de l'aliment:</label>
+        <input type="text" id="nom" name="nom" required>
+
+        <label for="date_peremption">Date de péremption:</label>
+        <input type="date" id="date_peremption" name="date_peremption" required>
+
+        <button type="button" onclick="ajouterAliment()">Ajouter</button>
+    </form>
+
+<!-- Ajout du bouton pour afficher/masquer le texte des alertes -->
+
+<button type="button" onclick="toggleText()">Afficher/Masquer Recommandation</button>
+
+<div id="texteAlerte" style="display: none;">
+    <p>  </p>
+</div>
+
+    <div class="alert" id="alerteJoursRestants"></div>
+
+    <ul id="listeAliments">
+        <!-- Existing food items will be displayed here -->
+    </ul>
+
+
+
+    <script>
+        // Chargement des aliments depuis le stockage local lors de l'ouverture de la page
+        window.onload = function () {
+            afficherListe();
+            // Vérifie si la date de péremption est dans moins de 2 jours et affiche une alerte si c'est le cas
+            verifierAlertes();
+        };
+
+        function ajouterAliment() {
+            var nom = document.getElementById('nom').value;
+            var datePeremption = document.getElementById('date_peremption').value;
+
+            var savedAliments = JSON.parse(localStorage.getItem('aliments')) || [];
+
+            // Ajoute le nouvel aliment à la liste des aliments sauvegardés
+            savedAliments.push({ nom: nom, datePeremption: datePeremption });
+
+            // Tri des aliments par date de péremption
+            savedAliments.sort(function (a, b) {
+                return new Date(a.datePeremption) - new Date(b.datePeremption);
+            });
+
+            // Sauvegarde la liste mise à jour dans le stockage local
+            localStorage.setItem('aliments', JSON.stringify(savedAliments));
+
+            // Met à jour l'affichage de la liste
+            afficherListe();
+
+            // Efface les champs du formulaire après l'ajout
+            document.getElementById('nom').value = '';
+            document.getElementById('date_peremption').value = '';
+
+            // Vérifie si la date de péremption est dans moins de 2 jours
+            verifierAlertes();
+        }
+
+        function verifierAlertes() {
+            var savedAliments = JSON.parse(localStorage.getItem('aliments')) || [];
+            var today = new Date();
+            var twoDaysFromNow = new Date();
+            twoDaysFromNow.setDate(today.getDate() + 2);
+
+            var alerteJoursRestants = document.getElementById('alerteJoursRestants');
+            alerteJoursRestants.innerHTML = '';
+
+            savedAliments.forEach(function (aliment) {
+                var expirationDate = new Date(aliment.datePeremption);
+                var joursRestants = Math.ceil((expirationDate - today) / (1000 * 60 * 60 * 24));
+
+                if (expirationDate <= twoDaysFromNow) {
+                    var alerte = document.createElement('div');
+                    alerte.className = 'alert';
+                    alerte.textContent = "Attention ! La date de péremption de " + aliment.nom + " est dans " + joursRestants + " jour(s) !";
+                    alerteJoursRestants.appendChild(alerte);
+                }
+            });
+        }
+
+        function afficherListe() {
+            var savedAliments = JSON.parse(localStorage.getItem('aliments')) || [];
+            var liste = document.getElementById('listeAliments');
+
+            // Supprime tous les éléments de la liste
+            liste.innerHTML = '';
+
+            savedAliments.forEach(function (aliment) {
+                var nouvelElement = document.createElement('li');
+                nouvelElement.textContent = aliment.nom + ' - Date de péremption: ' + aliment.datePeremption;
+                
+                var removeButton = document.createElement('button');
+                removeButton.className = 'remove-btn';
+                removeButton.textContent = 'Supprimer';
+                removeButton.onclick = function () {
+                    supprimerAliment(aliment);
+                };
+
+                nouvelElement.appendChild(removeButton);
+                liste.appendChild(nouvelElement);
+            });
+        }
+        
+        
+
+function supprimerAliment(aliment) {
+    var savedAliments = JSON.parse(localStorage.getItem('aliments')) || [];
+
+    // Filtrer les aliments pour enlever celui qui doit être supprimé
+    savedAliments = savedAliments.filter(function (item) {
+        return item.nom !== aliment.nom || item.datePeremption !== aliment.datePeremption;
+    });
+
+    // Sauvegarde la liste mise à jour dans le stockage local
+    localStorage.setItem('aliments', JSON.stringify(savedAliments));
+
+    // Met à jour l'affichage de la liste
+    afficherListe();
+
+    // Vérifie si la date de péremption est dans moins de 2 jours
+    verifierAlertes();
+}
+
+function getAlimentsEnAlerte() {
+    var savedAliments = JSON.parse(localStorage.getItem('aliments')) || [];
+    var alimentsEnAlerte = [];
+
+    var today = new Date();
+    var twoDaysFromNow = new Date();
+    twoDaysFromNow.setDate(today.getDate() + 2);
+
+    savedAliments.forEach(function (aliment) {
+        var expirationDate = new Date(aliment.datePeremption);
+
+        if (expirationDate <= twoDaysFromNow) {
+            alimentsEnAlerte.push(aliment);
+        }
+    });
+
+    return alimentsEnAlerte;
+}
+
+
+function recette(aliments) {
+    // Concatène les noms des aliments en une seule chaîne 
+    var recherche = aliments.map(function (aliment) {
+        return aliment.nom+',';
+    }).join(' ');
+
+    
+    var suggestionRecette = obtenirSuggestionRecette(recherche);
+
+
+
+  
+alert("Suggestion de recette avec les aliments alertés :\n\n" + suggestionRecette); 
+   
+   
+}
+
+function obtenirSuggestionRecette(recherche) {
+    
+
+    
+    return "fais une recette avec " + recherche + ".";
+}
+
+
+recette(getAlimentsEnAlerte())
+
+
+
+
+//gere me bouton de recommandation
+var texteAlerteVisible = true;
+
+function toggleText() {
+    var texteAlerte = document.getElementById('texteAlerte');
+    
+    // Récupère les aliments en alerte
+    var alimentsEnAlerte = getAlimentsEnAlerte().map(function (aliment) {
+        return aliment.nom+' ';
+    }).join(' ');
+
+    // Génère le texte des alertes
+    var texte = "fais une recette avec "+
+    alimentsEnAlerte+".";
+
+    // Met à jour le texte affiché
+    texteAlerte.textContent = texte;
+
+    // Inverse la visibilité du texte des alertes
+    texteAlerteVisible = !texteAlerteVisible;
+
+    // Met à jour l'affichage en fonction de la visibilité
+    texteAlerte.style.display = texteAlerteVisible ? 'block' : 'none';
+}
+
+
+
+
+
+
+    </script>
+
+</body>
+</html>
